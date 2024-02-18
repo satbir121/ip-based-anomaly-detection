@@ -41,7 +41,7 @@ export class MySQLDB implements MySQLDBInterface {
       const [results] = await this.connection.execute("SELECT * FROM `LastIPAddress` WHERE `UserID` = ?", [userId]);
       return results[0];
     } catch (error: any) {
-      throw new Error(error);
+      throw new Error(error.message);
     }
   }
 
@@ -56,7 +56,7 @@ export class MySQLDB implements MySQLDBInterface {
       );
       return results[0];
     } catch (error: any) {
-      throw new Error(error);
+      throw new Error(error.message);
     }
   }
 
@@ -66,12 +66,12 @@ export class MySQLDB implements MySQLDBInterface {
     }
     try {
       const [results] = await this.connection.execute(
-        "UPDATE `LastIPAddress` SET IPAddress = '?' LatLong = Point(?,?) WHERE UserID = ?",
+        "UPDATE `LastIPAddress` SET IPAddress = '?', LatLong = Point(?,?) WHERE UserID = '?'",
         [ newIpAddress, lat, long, userId]
       );
       return results[0];
     } catch (error: any) {
-      throw new Error(error);
+      throw new Error(error.message);
     }
   }
 }

@@ -15,6 +15,7 @@ export default class AnomalyDetection {
       const ipAddressLog = await this.mysqlDB.getLastIPAddressLog(userId);
 
       let riskScore = 0;
+      let status = "";
       let message = undefined;
       // If there is no Ip address in the database, then just update it and return
       // TODO: remove the hard coded value of 0
@@ -43,13 +44,16 @@ export default class AnomalyDetection {
         riskScore = AnomalyDetection.calculateRiskScore(distance, timeElapsedInHours);
 
         // Update the new IP address in the database
-        await this.mysqlDB.updateLastIPAddressLog(userId, newIpAddress, latitude, longitude);
+        // TODO: This risk score is hard coded. It should be a configurable value.
+        if (riskScore < 0.8) {
+          await this.mysqlDB.updateLastIPAddressLog(userId, newIpAddress, latitude, longitude);
+        }
         message =
           "Distance is " + distance + " and time elapsed is " + timeElapsed + " hours. Risk score is " + riskScore;
       }
 
       // If there is an IP address, then check if the IP address is matching with the last IP address
-      const status = riskScore > 0.8 ? "ANOMALY_DETECTED" : "NO_ANOMALY_DETECTED";
+      status = riskScore > 0.8 ? "ANOMALY_DETECTED" : "NO_ANOMALY_DETECTED";
 
       return {
         status,
@@ -57,7 +61,7 @@ export default class AnomalyDetection {
         message,
       };
     } catch (err: any) {
-      throw new Error(err);
+      throw new Error(err.message);
     }
   }
   private static getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
