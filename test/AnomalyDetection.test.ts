@@ -1,16 +1,22 @@
-const { calculateRiskScore } = require("./utils");
+import AnomalyDetection from "../src/domain/AnomalyDetection";
 
 const totalElements = 1000
 const timeElapsedArray = [...Array(totalElements).keys()].map((i) => i * 0.01);
 const distanceArray = [...Array(totalElements).keys()].map((i) => i * 2);;
 
+type FalseResults = {
+    timeElapsed: number;
+    riskScore: number;
+    distance: number;
+}
+
 const results = []
 for(let i = 0; i < timeElapsedArray.length; i++) {
     let riskScores = [];
-    const timeElapsed = timeElapsedArray[i];
+    const timeElapsed = timeElapsedArray[i] || -1;
     for(let j = 0; j < distanceArray.length; j++) {
-        const distance = distanceArray[j];
-        riskScores.push(calculateRiskScore(distance, timeElapsed));
+        const distance = distanceArray[j] || -1;
+        riskScores.push(AnomalyDetection.calculateRiskScore(distance, timeElapsed));
     }
     results.push({
         timeElapsed,
@@ -18,13 +24,13 @@ for(let i = 0; i < timeElapsedArray.length; i++) {
     });
 }
 
-const potentialFalsePositives = [];
-const potentialFalseNegatives = [];
+const potentialFalsePositives: FalseResults[] = [];
+const potentialFalseNegatives: FalseResults[] = [];
 results.forEach((result) => {
     const timeElapsed = result.timeElapsed;
     result.riskScores.forEach((riskScore, index) => {
         if(riskScore > 0.8) {
-            const distance = distanceArray[index];
+            const distance = distanceArray[index] || -1;
             const speed = distance/timeElapsed;
             if(speed < 500) {
                 potentialFalsePositives.push({
@@ -38,7 +44,7 @@ results.forEach((result) => {
 
     result.riskScores.forEach((riskScore, index) => {
         if(riskScore < 0.2) {
-            const distance = distanceArray[index];
+            const distance = distanceArray[index] || -1;
             const speed = distance/timeElapsed;
             if(speed > 750) {
                 potentialFalseNegatives.push({
