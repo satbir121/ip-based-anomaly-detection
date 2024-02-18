@@ -27,29 +27,30 @@ export default class AnomalyDetection {
         if (ipAddressLog.IPAddress === newIpAddress) {
           riskScore = 0;
           message = "The previous IP address was same as the one sent.";
-        }
-        // If the Ip address is neither same nor it is a new signin, then call the Third party service to get lat long.
-        const distance = AnomalyDetection.getDistanceFromLatLonInKm(
-          latitude,
-          longitude,
-          ipAddressLog.LatLong.x,
-          ipAddressLog.LatLong.y
-        );
-        // Check if the lat long are close to the last lat long
-        const timeNowMinutes = new Date().getTime() / (1000 * 60);
-        const lastLoginTimeMinutes = new Date(ipAddressLog.timestamp).getTime() / (1000 * 60);
-        const timeElapsed = timeNowMinutes - lastLoginTimeMinutes;
-        const timeElapsedInHours = timeElapsed / 60;
+        } else {
+          // If the Ip address is neither same nor it is a new signin, then call the Third party service to get lat long.
+          const distance = AnomalyDetection.getDistanceFromLatLonInKm(
+            latitude,
+            longitude,
+            ipAddressLog.LatLong.x,
+            ipAddressLog.LatLong.y
+          );
+          // Check if the lat long are close to the last lat long
+          const timeNowMinutes = new Date().getTime() / (1000 * 60);
+          const lastLoginTimeMinutes = new Date(ipAddressLog.timestamp).getTime() / (1000 * 60);
+          const timeElapsed = timeNowMinutes - lastLoginTimeMinutes;
+          const timeElapsedInHours = timeElapsed / 60;
 
-        riskScore = AnomalyDetection.calculateRiskScore(distance, timeElapsedInHours);
+          riskScore = AnomalyDetection.calculateRiskScore(distance, timeElapsedInHours);
 
-        // Update the new IP address in the database
-        // TODO: This risk score is hard coded. It should be a configurable value.
-        if (riskScore < 0.8) {
-          await this.mysqlDB.updateLastIPAddressLog(userId, newIpAddress, latitude, longitude);
+          // Update the new IP address in the database
+          // TODO: This risk score is hard coded. It should be a configurable value.
+          if (riskScore < 0.8) {
+            await this.mysqlDB.updateLastIPAddressLog(userId, newIpAddress, latitude, longitude);
+          }
+          message =
+            "Distance is " + distance + " and time elapsed is " + timeElapsed + " hours. Risk score is " + riskScore;
         }
-        message =
-          "Distance is " + distance + " and time elapsed is " + timeElapsed + " hours. Risk score is " + riskScore;
       }
 
       // If there is an IP address, then check if the IP address is matching with the last IP address
